@@ -49,16 +49,23 @@
                         :value="customer.mobileNumber"
                         name="mobile-number"
                         :label-text="$t('labels.mobileNumber')"
-                        :has-error="!isMobileNumberValid"
+                        :has-error="isMobileNumberEmpty || isMobileNumberInvalid"
                         @input="updateCustomerDetails({ mobileNumber: $event })"
                     >
                         <template #error>
                             <error-message
-                                v-if="!isMobileNumberValid"
+                                v-if="isMobileNumberEmpty"
                                 data-js-error-message
-                                data-test-id="error-mobile-number"
+                                data-test-id="error-mobile-number-empty"
                             >
                                 {{ $t('validationMessages.mobileNumber.requiredError') }}
+                            </error-message>
+                            <error-message
+                                v-if="isMobileNumberInvalid"
+                                data-js-error-message
+                                data-test-id="error-mobile-number-invalid"
+                            >
+                                {{ $t('validationMessages.mobileNumber.invalidCharError') }}
                             </error-message>
                         </template>
                     </form-field>
@@ -303,14 +310,16 @@ export default {
 
         ...mapGetters(VUEX_CHECKOUT_MODULE, ['firstDialogError']),
 
-        isMobileNumberValid () {
-            /*
-            * Validation methods return true if the validation conditions
-            * have not been met and the field has been `touched` by a user.
-            * The $dirty boolean changes to true when the user has focused/lost
-            * focus on the input field.
-            */
-            return !this.$v.customer.mobileNumber.$dirty || this.$v.customer.mobileNumber.isValidPhoneNumber;
+        isMobileNumberEmpty () {
+            const wasFocused = this.$v.customer.mobileNumber.$dirty;
+            const value = this.$v.customer.mobileNumber.$model;
+            return wasFocused && !value;
+        },
+
+        isMobileNumberInvalid () {
+            const wasFocused = this.$v.customer.mobileNumber.$dirty;
+            const isValid = this.$v.customer.mobileNumber.isValidPhoneNumber;
+            return wasFocused && !this.isMobileNumberEmpty && !isValid;
         },
 
         isCheckoutMethodDelivery () {
